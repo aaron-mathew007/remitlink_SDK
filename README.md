@@ -4,16 +4,20 @@ RemitLinkSDK in Swift language
 
 
 SDK Documentation
+
 Overview
 This SDK is designed to streamline interactions with your platform by providing a set of
 tools and functionalities organized into core groups: Core, Models, Utilities, and
 Configuration. Below is a breakdown of the SDK components and their respective
 responsibilities.
 
+
 Group Breakdown
+
 Core
 The Core group includes the foundational components that drive the SDK’s primary
 functionalities:
+
 APIService
  Description: Responsible for handling all API-related communication.
  Features:
@@ -36,10 +40,11 @@ o func login(username: String, password: String) -&gt; Bool
 o func refreshToken() -&gt; Bool
 o func logout()
 
+
 Models
 The Models group represents the data structures used by the SDK:
-Quote
 
+Quote
  Description: Represents a financial quote object.
  Properties:
 o id: String
@@ -59,8 +64,11 @@ o date: Date
  Methods:
 o func toJSON() -&gt; [String: Any]
 
+
+
 Utilities
 The Utilities group provides helper classes for common tasks:
+
 JsonParser
  Description: Simplifies JSON parsing and serialization.
  Key Methods:
@@ -78,9 +86,9 @@ o func monitorNetworkStatus(callback: (Bool) -&gt; Void)
 
 Configuration
 The Configuration group allows the SDK to be customized based on your requirements:
+
 SDKConfig
  Description: Centralized configuration for the SDK.
-
  Properties:
 o baseURL: String
 o timeoutInterval: TimeInterval
@@ -116,6 +124,8 @@ if let quote: Quote = JsonParser().parse(jsonData, to: Quote.self) {
 print(&quot;Quote ID: \(quote.id)&quot;)
 }
 
+
+
 Testing
  Unit Testing: Ensure all components (e.g., APIService, AuthenticationManager)
 are thoroughly tested using mock data and stubs.
@@ -128,6 +138,8 @@ Future Enhancements
 2. Expand the Models group to include additional entities as required.
 3. Provide Swift Package Manager (SPM) support for easier integration.
 4. Enhance error-handling mechanisms for better developer experience.
+
+
 
 Conclusion
 This SDK is structured to provide flexibility, scalability, and ease of use. Feel free to
