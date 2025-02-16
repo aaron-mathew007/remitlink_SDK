@@ -1,66 +1,83 @@
 import Foundation
 
-/// Handles user authentication and token management
 class AuthenticationManager {
     static let shared = AuthenticationManager()
     private let keychainHelper = KeychainHelper.shared
     
     private init() {}
 
-    // MARK: - Authenticate User
-    func authenticate(username: String, password: String, completion: @escaping (Result<String, Error>) -> Void) {
-        // Define parameters
-        let parameters: [String: Any] = [
-            "username": username,
-            "password": password
-        ]
-        
-        // API Endpoint
-        let endpoint = "/api/authenticate"
-        
-        // Make API request
-        APIService.shared.makeRequest(endpoint: endpoint, method: "POST", headers: nil, body: parameters) { result in
-            switch result {
-            case .success(let data):
-                do {
-                    // Decode the response
-                    let authResponse = try JSONDecoder().decode(AuthResponse.self, from: data)
-                    
-                    // Save the token securely in the Keychain
-                    self.keychainHelper.save(authResponse.token, key: "accessToken")
-
-                    // Retrieve the access token from the Keychain
-                    let token = self.keychainHelper.get(key: "accessToken")
-
-                    // Delete the access token from the Keychain
-                    self.keychainHelper.delete(key: "accessToken")
-                    
-                    // Return the token in the completion handler
-                    completion(.success(authResponse.token))
-                } catch {
+    // Authenticate the user and save the access token
+        func authenticate(username: String, password: String, completion: @escaping (Result<String, Error>) -> Void) {
+            let parameters: [String: Any] = [
+                "username": username,
+                "password": password,
+                "grant_type": "password",
+                "client_id": SDKConfig.shared.clientID,
+                "client_secret": SDKConfig.shared.clientSecret
+            ]
+            
+            var urlComponents = URLComponents()
+            urlComponents.queryItems = parameters.map { key, value in
+                URLQueryItem(name: key, value: "\(value)")
+            }
+            
+            guard let bodyData = urlComponents.query?.data(using: .utf8) else {
+                completion(.failure(NSError(domain: "InvalidParameters", code: -1, userInfo: nil)))
+                return
+            }
+            
+            let endpoint = "/auth/realms/cdp/protocol/openid-connect/token"
+            let headers = ["Content-Type": "application/x-www-form-urlencoded"]
+            
+            APIService.shared.makeRequest(endpoint: endpoint, method: "POST", headers: headers, body: nil, bodyData: bodyData) { result in
+                switch result {
+                case .success(let data):
+                    do {
+                        let authResponse = try JSONDecoder().decode(AuthResponse.self, from: data)
+                        
+                        // Save the access token to the Keychain
+                        self.keychainHelper.save(authResponse.access_token, key: "access_token")
+                        
+                        // Print the access token for debugging
+                        print("Access token saved: \(authResponse.access_token)")
+                        
+                        completion(.success(authResponse.access_token))
+                    } catch {
+                        print("Decoding error: \(error)")
+                        completion(.failure(error))
+                    }
+                case .failure(let error):
+                    print("API request failed: \(error)")
                     completion(.failure(error))
                 }
-            case .failure(let error):
-                completion(.failure(error))
             }
         }
-    }
-    
-    // MARK: - Get Access Token
-    func getAccessToken() -> String? {
-        return keychainHelper.get(key: "accessToken")
+        
+        func getAccessToken() -> String? {
+            // Retrieve the access token from the Keychain
+            let accessToken = keychainHelper.get(key: "access_token")
+            
+            // Print the access token for debugging
+            if let accessToken = accessToken {
+                print("Retrieved access token: \(accessToken)")
+            } else {
+                print("No access token found in Keychain.")
+            }
+            
+            return accessToken
+        }
+
+        func logout() {
+            // Delete the access token from the Keychain
+            keychainHelper.delete(key: "access_token")
+            print("Access token deleted from Keychain.")
+        }
     }
 
-    // MARK: - Logout
-    func logout() {
-        keychainHelper.delete(key: "accessToken")
-    }
-}
-
-// MARK: - AuthResponse Model
-/// Model for the authentication response
+// AuthResponse model
 struct AuthResponse: Decodable {
-    let token: String
-    let userId: String
-    let expiresIn: Int
+    let access_token: String
+    let expires_in: Int
+    let refresh_token: String?
+    let token_type: String?
 }
