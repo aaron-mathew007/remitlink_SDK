@@ -2,10 +2,9 @@ import Foundation
 
 class SDKConfig {
     static let shared = SDKConfig()
-    
-    var baseURL: String = "https://api.remitlink.com"
-    var clientID: String = "your-client-id"
-    var clientSecret: String = "your-client-secret"
+    let baseURL = "https://drap-sandbox.digitnine.com"
+    var clientID: String = "cdp_app"
+    var clientSecret: String = "mSh18BPiMZeQqFfOvWhgv8wzvnNVbj3Y"
 
     private init() {}
 }
